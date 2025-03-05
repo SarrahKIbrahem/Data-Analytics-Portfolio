@@ -1,0 +1,485 @@
+--Advanced SQL Final Project (online forum for retro computing enthusiasts)
+
+--create a databse and warehouse to store Forum data: 
+USE ROLE sysadmin;
+CREATE DATABASE IF NOT EXISTS forum;
+CREATE OR REPLACE WAREHOUSE forum_loading_wh WITH 
+    WAREHOUSE_SIZE='SMALL' 
+    AUTO_RESUME = TRUE
+    AUTO_SUSPEND = 300;
+CREATE OR REPLACE WAREHOUSE forum_query_wh WITH 
+    WAREHOUSE_SIZE='SMALL' 
+    AUTO_RESUME = TRUE
+    AUTO_SUSPEND = 300;
+    
+--Create a resource monitor as a component of our data governance procedures 
+
+USE ROLE accountadmin;
+
+CREATE OR REPLACE RESOURCE MONITOR forum_rm
+WITH CREDIT_QUOTA = 100 
+     FREQUENCY = monthly 
+     START_TIMESTAMP = immediately
+     TRIGGERS 
+        ON 80 PERCENT DO NOTIFY 
+        ON 95 PERCENT DO SUSPEND 
+        ON 100 PERCENT DO SUSPEND_IMMEDIATE; 
+
+-- Apply a resource monitor to our warehouse
+ALTER WAREHOUSE forum_query_wh
+SET RESOURCE_MONITOR = forum_rm;
+
+-- List our warehouses. (See the resource monitor field.)
+SHOW WAREHOUSES;
+
+
+-- Adjust the statement timeout & statement queued parameter
+ALTER WAREHOUSE forum_query_wh SET statement_timeout_in_seconds = 1200;
+ALTER WAREHOUSE forum_query_wh SET statement_queued_timeout_in_seconds = 600;
+
+-- Recheck the warehouse statement parameters
+SHOW PARAMETERS LIKE '%statement%' IN WAREHOUSE forum_query_wh;
+
+--Create Tables 
+
+USE ROLE sysadmin;
+USE forum.public;
+USE WAREHOUSE forum_loading_wh;
+
+
+-- Create the database tables.
+CREATE OR REPLACE TABLE badges (
+    badge_id integer,
+    user_id integer,
+    name string,
+    date datetime,
+    class string
+);
+
+CREATE OR REPLACE TABLE post_history (
+    post_history_id integer,
+    post_history_type_id integer,
+    post_id integer,
+    creation_date datetime,
+    user_id integer,
+    text string,
+    comment string
+);
+
+CREATE OR REPLACE TABLE post_links (
+    post_link_id integer,
+    creation_date datetime,
+    post_id integer,
+    related_post_id integer,
+    link_type_id integer
+);
+
+CREATE OR REPLACE TABLE posts (
+    post_id integer,
+    post_type_id integer,
+    creation_date datetime,
+    score integer,
+    view_count integer,
+    title string,
+    body string,
+    owner_user_id integer,
+    last_editor_user_id integer,
+    last_edit_date datetime,
+    last_activity_date datetime,
+    tags string,
+    answer_count integer,
+    comment_count integer,
+    accepted_answer_id integer,
+    parent_id integer,
+    closed_date datetime
+);
+
+CREATE OR REPLACE TABLE tags (
+    tag_id integer,
+    tag_name string,
+    count integer,
+    excerpt_post_id integer,
+    wiki_post_id integer
+);
+
+CREATE OR REPLACE TABLE users (
+    user_id integer,
+    display_name string,
+    about_me string,
+    reputation integer,
+    creation_date datetime,
+    last_access_date datetime,
+    views integer,
+    up_votes integer,
+    down_votes integer,
+    account_id integer
+);
+
+CREATE OR REPLACE TABLE votes (
+    vote_id integer,
+    post_id integer,
+    vote_type_id integer,
+    creation_date date
+);
+
+CREATE OR REPLACE TABLE comments_json (v variant);
+
+
+--Create a stage to access the data 
+
+CREATE OR REPLACE STAGE forum_stage
+    url = 's3://retrocomputing-forum/';
+
+LIST @forum_stage;
+DESCRIBE STAGE forum_stage;
+
+--Creat three diffrent stages for each of our file formats 
+-- Comma-delimited file format
+CREATE OR REPLACE FILE FORMAT forum_csv 
+TYPE = 'CSV' 
+FIELD_DELIMITER = ',' 
+FIELD_OPTIONALLY_ENCLOSED_BY = '"' 
+SKIP_HEADER = 1 
+NULL_IF = (''); 
+
+--Pipe-delimited file format
+CREATE OR REPLACE  FILE FORMAT forum_pipe 
+TYPE = 'CSV' 
+FIELD_DELIMITER = '|' 
+FIELD_OPTIONALLY_ENCLOSED_BY = '"' 
+SKIP_HEADER = 1 
+NULL_IF = (''); 
+
+-- Tab-delimited file format
+CREATE OR REPLACE FILE FORMAT forum_tab 
+TYPE = 'CSV' 
+FIELD_DELIMITER = '\t' 
+FIELD_OPTIONALLY_ENCLOSED_BY = '"' 
+SKIP_HEADER = 1 
+NULL_IF = (''); 
+
+--Confirm file formats created: 
+SHOW FILE FORMATS IN DATABASE forum;
+
+--Load the data in the respective files using a copy command;
+-- Load data into posts table
+COPY INTO posts 
+FROM @forum_stage 
+FILE_FORMAT = forum_csv 
+PATTERN = '.*posts\.csv.*'; 
+
+-- Load data into post_history table
+COPY INTO post_history 
+FROM @forum_stage 
+FILE_FORMAT = forum_csv 
+PATTERN = '.*post_history\.csv.*'; 
+
+-- Load data into post_links table
+COPY INTO post_links 
+FROM @forum_stage 
+FILE_FORMAT = forum_csv 
+PATTERN = '.*post_links\.csv.*'; 
+
+-- Load data into tags table
+COPY INTO tags 
+FROM @forum_stage 
+FILE_FORMAT = forum_tab 
+PATTERN = '.*tags_tab\.txt.*'; 
+
+-- Load data into users table
+COPY INTO users 
+FROM @forum_stage 
+FILE_FORMAT = forum_csv 
+PATTERN = '.*users\.csv.*'; 
+
+-- Load data into votes table
+COPY INTO votes 
+FROM @forum_stage 
+FILE_FORMAT = forum_pipe 
+PATTERN = '.*votes_pipe\.txt.*'; 
+
+--Load badges table and reorder the columns 
+COPY INTO badges (badge_id, user_id, name, date, class)
+FROM (
+    SELECT 
+        $1,                               
+        $2,                               
+        $3,                               
+        $4,                               
+        CASE 
+            WHEN $5 = '1' THEN 'Gold'
+            WHEN $5 = '2' THEN 'Silver'
+            WHEN $5 = '3' THEN 'Bronze'
+            ELSE $5                       
+        END                               
+    FROM @forum_stage/badges.csv
+)
+FILE_FORMAT = forum_csv
+PATTERN = '.*badges\.csv.*';
+
+-- Switch to query warehouse for the query operation
+USE WAREHOUSE forum_query_wh;
+
+-- Query gold badges only
+SELECT *
+FROM badges
+WHERE class = 'Gold'
+ORDER BY date DESC;
+
+
+--Load contetnt into Comments_json table           
+COPY INTO comments_json
+FROM @forum_stage
+FILE_FORMAT = (type= json
+        strip_outer_array = true)
+PATTERN = '.*comments.json'; 
+               
+-- Create a view to structure the JSON data for easier querying- this structures the semi structured data 
+CREATE OR REPLACE VIEW comments_view AS
+SELECT
+    v:"comment_id"::INTEGER AS comment_id,
+    v:"post_id"::INTEGER AS post_id,
+    v:"score"::INTEGER AS score,
+    v:"text"::STRING AS text,
+    v:"creation_date"::TIMESTAMP AS creation_date,
+    v:"user_id"::INTEGER AS user_id
+FROM comments_json
+WHERE v IS NOT NULL;
+
+--Transform Data (After Loading) 
+
+USE WAREHOUSE FORUM_QUERY_WH;
+
+-- Create a clone of the users table called "users_dev"
+CREATE OR REPLACE TABLE users_dev CLONE users;
+ALTER TABLE users_dev ADD COLUMN years_of_activity INTEGER; --add column
+
+UPDATE users_dev
+SET years_of_activity = TIMESTAMPDIFF(YEAR, creation_date, last_access_date); --populate new column 
+
+--Verify the new column
+SELECT *
+FROM users_dev
+LIMIT 10;
+
+--Drop old table and use cloned one as org 
+ALTER TABLE users RENAME TO users_old;
+ALTER TABLE users_dev RENAME TO users;
+
+DROP TABLE users_old;
+
+-- Verify the production table has the new column
+SELECT *
+FROM users
+WHERE YEARS_OF_ACTIVITY >=7;
+
+
+--Create a new role 
+
+USE ROLE useradmin;
+
+CREATE OR REPLACE ROLE forum_query_role;
+
+SET my_user = CURRENT_USER(); --storing it in a vairable 
+GRANT ROLE forum_query_role TO USER identifier($my_user);
+
+
+USE ROLE securityadmin;
+
+GRANT OPERATE, USAGE ON WAREHOUSE forum_query_wh TO ROLE forum_query_role;
+GRANT USAGE ON DATABASE forum TO ROLE forum_query_role;
+GRANT USAGE ON ALL SCHEMAS IN DATABASE forum TO ROLE forum_query_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA forum.public TO ROLE forum_query_role;
+GRANT SELECT ON ALL VIEWS IN SCHEMA forum.public TO ROLE forum_query_role;
+
+SHOW ROLES;
+
+
+--Answer Business Questions using new role 
+
+USE ROLE forum_query_role;
+USE WAREHOUSE forum_query_wh;
+
+--Q1:What is the date range of forum posts?
+
+SELECT 
+    MIN(creation_date),
+    MAX(creation_date)
+FROM posts;
+--the date the first post was created was 2016-04-19
+
+--Q2 How many users do we have?
+
+SELECT COUNT(DISTINCT user_id)
+FROM users;
+--22305 users 
+
+--Q3 Who are the top 5 users in terms of reputation? 
+SELECT display_name, reputation 
+FROM users 
+ORDER BY reputation DESC;
+--Raffzahn has the tope reputation 
+
+--Q4 Are we seeing a growth in users year-over-year?
+-- Query to analyze year-over-year growth in user registrations
+WITH user_counts AS (
+    -- Extract year from creation_date and count users per year
+    SELECT 
+        YEAR(creation_date) AS registration_year,
+        COUNT(*) AS new_users
+    FROM 
+        users
+    GROUP BY 
+        registration_year
+    ORDER BY 
+        registration_year
+),
+yoy_growth AS (
+    -- Calculate year-over-year differences
+    SELECT 
+        current_year.registration_year,
+        current_year.new_users,
+        LAG(current_year.new_users) OVER (ORDER BY current_year.registration_year) AS previous_year_users,
+        current_year.new_users - LAG(current_year.new_users) OVER (ORDER BY current_year.registration_year) AS absolute_difference,
+        ROUND(((current_year.new_users - LAG(current_year.new_users) OVER (ORDER BY current_year.registration_year)) / 
+               LAG(current_year.new_users) OVER (ORDER BY current_year.registration_year)) * 100, 2) AS percentage_growth
+    FROM 
+        user_counts AS current_year
+)
+
+-- Select from the yoy_growth CTE to get the final result
+SELECT * FROM yoy_growth
+ORDER BY registration_year DESC;
+--the diffrence between 2021 and 2022 is -608 
+
+--Q5 What % of users accessed the site recently?
+
+SELECT
+    COUNT(*) AS total_users,
+    COUNT(CASE WHEN last_access_date >= '2023-01-01' THEN 1 END) AS users_after_2023,
+    ROUND(100.0 * COUNT(CASE WHEN last_access_date >= '2023-01-01' THEN 1 END) / COUNT(*), 2) AS percentage_after_2023
+FROM 
+    users;
+--user% accsess on or after 1/1/2023 is 35%
+
+
+--Q6 What gold badge was earned the most?
+
+SELECT 
+    name AS badge_name,
+    COUNT(*) AS times_awarded
+FROM 
+    badges
+WHERE 
+    class = 'Gold'
+GROUP BY 
+    name
+ORDER BY 
+    times_awarded DESC;
+--the Famous Question badge was earned the most 
+
+
+--Q7 Which users earned the most badges 
+SELECT 
+    u.user_id,
+    u.display_name,
+    COUNT(b.badge_id) AS total_badges
+FROM 
+    users u
+JOIN 
+    badges b ON u.user_id = b.user_id
+GROUP BY 
+    u.user_id, u.display_name
+ORDER BY 
+    total_badges DESC
+LIMIT 10;
+-- the user with the top badges has 1495 badges in total 
+
+--Q8 How many posts were created per year?
+SELECT 
+    YEAR(creation_date) AS post_year,
+    COUNT(*) AS post_count
+FROM 
+    posts
+GROUP BY 
+    post_year
+ORDER BY 
+    post_year;
+--there we 2151 posts created in 2022
+
+
+--Q9 What % of posts have an accepted answer?
+
+SELECT
+    COUNT(*) AS total_questions,
+    COUNT(CASE WHEN accepted_answer_id IS NOT NULL THEN 1 END) AS questions_with_accepted_answers,
+    ROUND(100.0 * COUNT(CASE WHEN accepted_answer_id IS NOT NULL THEN 1 END) / COUNT(*), 2) AS percentage_with_accepted_answers
+FROM
+    posts
+WHERE
+    post_type_id = 1;
+--62% of question had an accepted answer 
+
+--Q10 What % of posts received no answers
+SELECT
+    COUNT(*) AS total_questions,
+    COUNT(CASE WHEN answer_count = 0 THEN 1 END) AS questions_with_no_answers,
+    ROUND(100.0 * COUNT(CASE WHEN answer_count = 0 THEN 1 END) / COUNT(*), 2) AS percentage_with_no_answers
+FROM
+    posts
+WHERE
+    post_type_id = 1;
+--6% of question had no answer 
+
+--Q11 Which posts received the most updates?
+
+SELECT 
+    p.post_id,
+    p.title,
+    p.creation_date,
+    p.score,
+    p.view_count,
+    COUNT(ph.post_history_id) AS update_count
+FROM 
+    posts p
+JOIN 
+    post_history ph ON p.post_id = ph.post_id
+WHERE 
+    p.title IS NOT NULL
+GROUP BY 
+    p.post_id, p.title, p.creation_date, p.score, p.view_count
+ORDER BY 
+    update_count DESC
+LIMIT 50;
+--post Thinkpad 350 keyboard had the most updates 
+
+--Q12 Which users contributed the most comments?
+SELECT 
+    cv.user_id,
+    u.display_name,
+    COUNT(cv.comment_id) AS comment_count
+FROM 
+    comments_view cv
+JOIN 
+    users u ON cv.user_id = u.user_id
+WHERE 
+    cv.user_id IS NOT NULL
+GROUP BY 
+    cv.user_id, u.display_name
+ORDER BY 
+    comment_count DESC
+LIMIT 10;
+--John N had the most comments 
+
+--Q13 How many distinct posts received a vote of 'spam' or 'offensive'?"
+SELECT 
+    COUNT(DISTINCT post_id) AS posts_with_spam_or_offensive_votes
+FROM 
+    votes
+WHERE 
+    vote_type_id IN (4, 12);  -- 4 = offensive, 12 = spam
+--144 posts 
+
+
+
+
