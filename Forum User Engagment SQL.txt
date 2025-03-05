@@ -1,4 +1,4 @@
---Advanced SQL Final Project (online forum for retro computing enthusiasts)
+--Online forum for retro computing enthusiasts
 
 --create a databse and warehouse to store Forum data: 
 USE ROLE sysadmin;
