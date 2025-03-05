@@ -15,8 +15,8 @@ This repository is organized into three sections, each highlighting a different 
   - Year-over-year user growth analysis 📊
   - Badge distribution and top contributors 🏆
   - Spam/offensive content moderation 🚨
-- **Code & Queries:** [Link to SQL folder]
-
+- **Code & Queries:** [Link to SQL folder](https://app.snowflake.com/inrzfzi/ol57048/w4uBssuVeo4s/query)
+  
 ### 2️⃣ Python Projects
 #### **Scooter Rental Analysis**
 - **Objective:** Explored factors affecting scooter rentals, conducted data analysis, and built a predictive model.
@@ -38,7 +38,7 @@ This repository is organized into three sections, each highlighting a different 
 
 ## Contact
 📧 Email: Sarrahki25@gmail.com  
-📊 Tableau Public: (https://public.tableau.com/app/profile/sarrah.ibrahem)
+📊 Tableau Public: [My Profile](https://public.tableau.com/app/profile/sarrah.ibrahem)
 
 ---
 This portfolio is a work in progress, and I will continue adding more projects as I advance in my data analytics journey!
