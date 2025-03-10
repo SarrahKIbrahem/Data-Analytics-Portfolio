@@ -7,7 +7,7 @@ I am a data analytics professional with a background in accounting, currently co
 This repository is organized into three sections, each highlighting a different aspect of my data analytics skill set:
 
 ### 1️⃣ SQL Projects
-#### **Advanced SQL: Forum Data Analysis**
+#### **SQL: Forum Engagement & Growth Analysis**
 - **Objective:** Analyzed an online forum for retro computing enthusiasts to evaluate user engagement, growth trends, and content quality.
 - **Key Skills:** Database creation, data transformation, query optimization, and business insights.
 - **Technologies:** SQL, Snowflake
