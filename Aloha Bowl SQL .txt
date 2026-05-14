@@ -1,0 +1,187 @@
+--This analysis explores customer reviews for Aloha Bowl and its competitors to understand how diners perceive their experiences. The goal is to 1- identify key differences, 2- highlight areas for improvement, and 3- uncover opportunities to enhance menu offerings and overall service.
+
+-- Create database
+CREATE DATABASE aloha_reviews_db;
+USE DATABASE aloha_reviews_db;
+
+--Create table 
+CREATE OR REPLACE TABLE restaurant_reviews (
+    restaurant_name STRING,
+    review_text STRING
+);
+--Create stage and store data in it 
+CREATE OR REPLACE STAGE reviews_stage
+    FILE_FORMAT = (TYPE = 'CSV' SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = '\042');
+
+--display files in stage 
+LIST @reviews_stage;
+
+--Copy data into table
+COPY INTO restaurant_reviews (restaurant_name, review_text)
+FROM @reviews_stage/restaurant_reviews.csv
+ON_ERROR = 'CONTINUE';
+
+DELETE FROM restaurant_reviews 
+WHERE restaurant_name = 'restaurant' AND review_text = 'review';
+
+--preview table 
+SELECT * FROM restaurant_reviews LIMIT 10;
+
+---------------------------------
+-- Exploratory Analysis
+---------------------------------
+
+-- Total reviews per restaurant.
+SELECT restaurant_name, COUNT(*) AS total_reviews
+FROM restaurant_reviews
+GROUP BY restaurant_name
+ORDER BY total_reviews DESC;
+
+-- Average review length per restaurant
+SELECT
+    restaurant_name,
+    ROUND(AVG(LENGTH(review_text)), 0) AS avg_review_length,
+    MIN(LENGTH(review_text))           AS shortest_review,
+    MAX(LENGTH(review_text))           AS longest_review
+FROM restaurant_reviews
+GROUP BY restaurant_name
+ORDER BY avg_review_length DESC;
+
+-----------------------------------------------------------------
+-- Summarize main differences between restaurants based on reviews 
+----------------------------------------------------------------
+
+-- Aggregate all reviews per restaurant into one text block,
+-- then ask Cortex to summarize the customer perception.
+SELECT
+    restaurant_name,
+    SNOWFLAKE.CORTEX.COMPLETE(
+        'mistral-large',
+        CONCAT(
+            'You are analyzing customer reviews for a poke bowl restaurant. ',
+            'Based on the following reviews, summarize in 3-5 sentences how customers perceive this restaurant. ',
+            'Focus on food quality, staff, service, and overall experience. ',
+            'Reviews: ', reviews_combined
+        )
+    ) AS perception_summary
+FROM (
+    SELECT
+        restaurant_name,
+        LISTAGG(review_text, ' | ') AS reviews_combined
+    FROM restaurant_reviews
+    GROUP BY restaurant_name
+)
+ORDER BY restaurant_name;
+
+-- Add sentiment score column to the existing table.
+ALTER TABLE restaurant_reviews 
+ADD COLUMN sentiment_score FLOAT;
+
+-- Populate sentiment for every review.
+UPDATE restaurant_reviews
+SET sentiment_score = SNOWFLAKE.CORTEX.SENTIMENT(review_text);
+
+--preview table 
+select *
+from restaurant_reviews
+limit 10;
+
+-- Sentiment summary per restaurant.
+SELECT
+    restaurant_name,
+    ROUND(AVG(sentiment_score), 2)                                    AS avg_sentiment,
+    COUNT(CASE WHEN sentiment_score > 0.25  THEN 1 END)                AS positive_reviews,
+    COUNT(CASE WHEN sentiment_score BETWEEN -0.25 AND 0.25 THEN 1 END)  AS neutral_reviews,
+    COUNT(CASE WHEN sentiment_score < -0.25 THEN 1 END)                AS negative_reviews,
+    COUNT(*)                                                           AS total_reviews
+FROM restaurant_reviews
+GROUP BY restaurant_name
+ORDER BY avg_sentiment DESC;
+
+-- Use Classify to assign themes to reviews 
+-- Add theme column to the existing table.
+ALTER TABLE restaurant_reviews
+ADD COLUMN theme STRING;
+
+-- Populate it using Cortex classify for every review.
+UPDATE restaurant_reviews
+SET theme = SNOWFLAKE.CORTEX.CLASSIFY_TEXT(
+    review_text,
+    ['Food Quality', 'Staff & Service', 'Wait Time', 'Atmosphere & Environment', 'Portion & Value']
+)['label']::STRING;
+
+-- Preview the results.
+SELECT restaurant_name, review_text, theme, sentiment_score
+FROM restaurant_reviews
+LIMIT 10;
+
+-- Theme distribution per restaurant.
+SELECT
+    restaurant_name,
+    theme,
+    COUNT(*)                                                            AS total_reviews,
+    ROUND(AVG(sentiment_score), 2)                                      AS avg_sentiment,
+    COUNT(CASE WHEN sentiment_score > 0.25  THEN 1 END)                AS positive_reviews,
+    COUNT(CASE WHEN sentiment_score BETWEEN -0.25 AND 0.25 THEN 1 END) AS neutral_reviews,
+    COUNT(CASE WHEN sentiment_score < -0.25 THEN 1 END)                AS negative_reviews
+FROM restaurant_reviews
+GROUP BY restaurant_name, theme
+ORDER BY restaurant_name, avg_sentiment ASC;
+
+-------------------------------------
+-- 2. Menu Improvement & Innovation
+-------------------------------------
+
+-- Identify specific food quality complaints for Aloha Bowl.
+SELECT
+    review_text,
+    sentiment_score,
+    SNOWFLAKE.CORTEX.EXTRACT_ANSWER(
+        review_text,
+        'What specific food complaint does the customer mention?'
+    )[0]['answer']::STRING AS food_complaint
+FROM restaurant_reviews
+WHERE restaurant_name = 'Aloha Bowl'
+AND theme = 'Food Quality'
+AND sentiment_score < 0.25
+ORDER BY sentiment_score ASC;
+-- evidence of saltiness 
+-- Update the classical bowl by adjusting the salt level 
+
+--New Bowl Ideas
+-- Pull what customers love most about competitor food quality.
+SELECT
+    restaurant_name,
+    review_text,
+    sentiment_score,
+    SNOWFLAKE.CORTEX.EXTRACT_ANSWER(
+        review_text,
+        'What specific ingredient, dish, or flavor does the customer praise?'
+    )[0]['answer']::STRING AS food_highlight
+FROM restaurant_reviews
+WHERE restaurant_name IN ('Poke Paradise', 'Island Fresh')
+AND theme = 'Food Quality'
+AND sentiment_score > 0.5
+ORDER BY restaurant_name, sentiment_score DESC;
+--Customers liked the Tropical themed bowl with mango at Island fresh 
+--Seasonal Fresh bowls were also liked at Poke Paradise 
+--Hawaiian bowl was liked at Poke Paradise 
+--Pinanple Paradise Bowl is liked at Poke Paradise 
+
+---------------------------------
+--3. Operational Recommendations
+----------------------------------
+
+-- Pull operational themes for Aloha Bowl ordered by priority.
+SELECT
+    theme,
+    review_text,
+    sentiment_score
+FROM restaurant_reviews
+WHERE restaurant_name = 'Aloha Bowl'
+AND theme IN ('Wait Time', 'Atmosphere & Environment', 'Staff & Service', 'Portion & Value')
+ORDER BY sentiment_score ASC;
+-- the reviews with the most negative sentiment are in regards to :
+-- Loud music 
+--high prices 
+--long wait time 
