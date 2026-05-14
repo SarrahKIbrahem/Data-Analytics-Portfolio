@@ -47,7 +47,7 @@ I am currently completing my Master's in Data Insights and Analytics with a back
   - Identified recurring customer concerns related to food quality, wait times, pricing, and atmosphere.
   - Used competitor review trends to recommend new menu offerings.
   - Generated operational and menu improvement recommendations using AI-powered SQL functions.
-- **Project File:** `GB891- Final SQL.sql`
+- **Project File:** `Aloha Bowl SQL.txt`
 
 ---
 
@@ -65,7 +65,7 @@ I am currently completing my Master's in Data Insights and Analytics with a back
   - Converted text into machine learning features using TF-IDF vectorization.
   - Evaluated and compared multiple classification models.
   - Generated a Kaggle competition submission file using the final model.
-- **Project File:** `GB657- Final Natural Language Processing with Disaster Tweets.py`
+- **Project File:** `Natural language processing with disaster tweets.py`
 
 ---
 
