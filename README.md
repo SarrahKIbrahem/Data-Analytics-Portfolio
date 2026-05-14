@@ -69,14 +69,17 @@ I am currently completing my Master's in Data Insights and Analytics with a back
 
 ---
 
-### Python: Scooter Rental Demand Prediction
-- **Objective:** Analyzed scooter rental data and built predictive models to forecast rental demand based on weather conditions.
-- **Key Skills:** Data cleaning, exploratory data analysis, regression analysis, predictive modeling.
-- **Technologies:** Python, Pandas, Scikit-learn, Matplotlib, Seaborn
+### Python Projects
+#### **Scooter Rental Analysis**
+- **Objective:** Explored factors affecting scooter rentals, conducted data analysis, and built a predictive model.
+- **Key Skills:** Data wrangling, exploratory data analysis (EDA), regression modeling, business insights.
+- **Technologies:** Python, Pandas, Seaborn, Scikit-learn
 - **Key Insights:**
-  - Identified weather patterns impacting scooter rental demand.
-  - Built a linear regression model to predict rental counts.
-  - Generated business recommendations based on customer usage trends.
+  - Seasonal trends in scooter rentals 
+  - Impact of weather conditions on demand 
+  - Linear regression model predicting rental volume 
+- **Project Details:** [Scooter Analysis with Business Insights](scooter-analysis-with-business-insights.md)
+
 
 ---
 
