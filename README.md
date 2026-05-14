@@ -47,7 +47,7 @@ I am currently completing my Master's in Data Insights and Analytics with a back
   - Identified recurring customer concerns related to food quality, wait times, pricing, and atmosphere.
   - Used competitor review trends to recommend new menu offerings.
   - Generated operational and menu improvement recommendations using AI-powered SQL functions.
-- **Project File:** 'Aloha Bowl SQL .txt'
+- **Project File:** `Aloha Bowl SQL .txt`
 
 ---
 
