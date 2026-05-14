@@ -1,45 +1,111 @@
 # Data Analytics Portfolio
 
+Welcome to my Data Analytics Portfolio.  
+This portfolio showcases projects completed throughout my learning journey in data analytics, business intelligence, machine learning, and data visualization.
+
 ## About Me
-I am a data analytics professional with a background in accounting, currently completing my master's in **Data Insights and Analytics**. My portfolio showcases SQL, Python, and Tableau projects that I have completed throughout my learning journey, demonstrating my ability to work with diverse datasets and extract valuable insights.
+I am currently completing my Master's in Data Insights and Analytics with a background in accounting and data analysis. My projects focus on SQL, Python, machine learning, business analytics, and data visualization.
 
-## Projects
-This repository is organized into three sections, each highlighting a different aspect of my data analytics skill set:
+## Skills
+- SQL
+- Python
+- Data Cleaning & Transformation
+- Exploratory Data Analysis (EDA)
+- Machine Learning
+- Natural Language Processing (NLP)
+- Data Visualization
+- Tableau
+- Snowflake
+- AWS
+- Business Analytics
 
-### 1️⃣ SQL Projects
+---
+
+# Projects
+
+## SQL Projects
+
+### SQL Projects
 #### **SQL: Forum Engagement & Growth Analysis**
 - **Objective:** Analyzed an online forum for retro computing enthusiasts to evaluate user engagement, growth trends, and content quality.
 - **Key Skills:** Database creation, data transformation, query optimization, and business insights.
 - **Technologies:** SQL, Snowflake
 - **Notable Queries:**
-  - Year-over-year user growth analysis 📊
-  - Badge distribution and top contributors 🏆
-  - Spam/offensive content moderation 🚨
+  - Year-over-year user growth analysis 
+  - Badge distribution and top contributors 
+  - Spam/offensive content moderation 
 - **Code & Queries:** [Link to SQL folder](https://app.snowflake.com/inrzfzi/ol57048/w4uBssuVeo4s/query)
-  
-### 2️⃣ Python Projects
-#### **Scooter Rental Analysis**
-- **Objective:** Explored factors affecting scooter rentals, conducted data analysis, and built a predictive model.
-- **Key Skills:** Data wrangling, exploratory data analysis (EDA), regression modeling, business insights.
-- **Technologies:** Python, Pandas, Seaborn, Scikit-learn
-- **Key Insights:**
-  - Seasonal trends in scooter rentals 🌍
-  - Impact of weather conditions on demand 🌦️
-  - Linear regression model predicting rental volume 📈
-- **Project Details:** [Scooter Analysis with Business Insights](scooter-analysis-with-business-insights.md)
-
-### 3️⃣ Tableau Dashboards
-#### **Accident Analysis Dashboard**
-- **Objective:** Interactive visualization of accident data, analyzing key factors such as location, severity, and trends.
-- **Key Skills:** Data visualization, storytelling, trend analysis
-- **Live Dashboard:** [Accidents Dashboard](https://public.tableau.com/app/profile/sarrah.ibrahem/viz/Accidents_17321187270060/Accidents)
-
-(Additional Tableau dashboards to be added once available.)
-
-## Contact
-📧 Email: Sarrahki25@gmail.com  
-📊 Tableau Public: [My Profile](https://public.tableau.com/app/profile/sarrah.ibrahem)
 
 ---
-This portfolio is a work in progress, and I will continue adding more projects as I advance in my data analytics journey!
 
+### SQL: Restaurant Review Sentiment & Menu Improvement Analysis
+- **Objective:** Analyzed customer reviews for Aloha Bowl and competitors to understand customer perception, identify operational weaknesses, and recommend menu and service improvements.
+- **Key Skills:** SQL, Snowflake, sentiment analysis, text classification, customer review analysis, business recommendations.
+- **Technologies:** SQL, Snowflake Cortex, Mistral, CLASSIFY_TEXT, SENTIMENT, EXTRACT_ANSWER
+- **Key Insights:**
+  - Compared customer sentiment across multiple restaurants.
+  - Identified recurring customer concerns related to food quality, wait times, pricing, and atmosphere.
+  - Used competitor review trends to recommend new menu offerings.
+  - Generated operational and menu improvement recommendations using AI-powered SQL functions.
+- **Project File:** `GB891- Final SQL.sql`
+
+---
+
+## Python Projects
+
+### Python: Natural Language Processing with Disaster Tweets
+- **Objective:** Built a machine learning model to classify whether tweets refer to real disasters, helping emergency response teams filter social media posts more efficiently.
+- **Key Skills:** Natural Language Processing (NLP), text preprocessing, TF-IDF vectorization, classification modeling, model evaluation.
+- **Technologies:** Python, Pandas, NLTK, Scikit-learn, TensorFlow/Keras, Seaborn, Matplotlib
+- **Models Used:**
+  - Logistic Regression
+  - Neural Network
+- **Key Results:**
+  - Cleaned and processed tweet text using punctuation removal, lowercasing, stopword removal, and lemmatization.
+  - Converted text into machine learning features using TF-IDF vectorization.
+  - Evaluated and compared multiple classification models.
+  - Generated a Kaggle competition submission file using the final model.
+- **Project File:** `GB657- Final Natural Language Processing with Disaster Tweets.py`
+
+---
+
+### Python: Scooter Rental Demand Prediction
+- **Objective:** Analyzed scooter rental data and built predictive models to forecast rental demand based on weather conditions.
+- **Key Skills:** Data cleaning, exploratory data analysis, regression analysis, predictive modeling.
+- **Technologies:** Python, Pandas, Scikit-learn, Matplotlib, Seaborn
+- **Key Insights:**
+  - Identified weather patterns impacting scooter rental demand.
+  - Built a linear regression model to predict rental counts.
+  - Generated business recommendations based on customer usage trends.
+
+---
+
+## Tableau Dashboards
+
+### Accidents Dashboard
+Interactive Tableau dashboard analyzing accident trends and patterns.
+
+Tableau Dashboard:  
+https://public.tableau.com/app/profile/sarrah.ibrahem/viz/Accidents_17321187270060/Accidents
+
+---
+
+## Tools & Technologies
+- Python
+- SQL
+- Snowflake
+- Tableau
+- AWS
+- Pandas
+- Scikit-learn
+- TensorFlow/Keras
+- Matplotlib
+- Seaborn
+- NLTK
+
+---
+
+## Contact
+- GitHub: https://github.com/SarrahKIbrahem
+- Tableau Public: https://public.tableau.com/app/profile/sarrah.ibrahem
+- LinkedIn: [Add your LinkedIn URL here]
