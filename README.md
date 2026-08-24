@@ -26,7 +26,7 @@ My projects span SQL, Python, Snowflake, machine learning, and data visualizatio
 
 ---
 
-### 🛴 Predictive Demand Analytics | Scooter Rental Analysis
+###  Predictive Demand Analytics | Scooter Rental Analysis
 
 **Python | Pandas | Scikit-learn**
 
@@ -41,7 +41,7 @@ My projects span SQL, Python, Snowflake, machine learning, and data visualizatio
 
 ---
 
-### 💬 Restaurant Review Sentiment & Menu Improvement Analysis
+###  Restaurant Review Sentiment & Menu Improvement Analysis
 
 **SQL | Snowflake Cortex | Mistral**
 
@@ -110,12 +110,5 @@ Developed an interactive Tableau dashboard to explore accident trends and patter
 **Machine Learning & NLP:** Scikit-learn, TensorFlow/Keras, NLTK
 **Data & Automation:** ETL, Data Cleaning & Transformation, Data Validation & Reconciliation, UiPath
 
----
-
-## About Me
-
-My background in accounting and finance provides a strong foundation in understanding business performance, while my experience in analytics allows me to approach business questions using data.
-
-I am particularly interested in using analytics to move beyond understanding **what happened** to determining **why it happened, what it means for the business, and what action should be taken next**.
 
 
