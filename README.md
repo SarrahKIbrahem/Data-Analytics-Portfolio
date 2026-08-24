@@ -22,7 +22,7 @@ My projects span SQL, Python, Snowflake, machine learning, and data visualizatio
   * Found that expanded customers averaged **4.15 active years vs. 3.17 years** for non-expanded customers and had **14.2% churn vs. 41.2%**, supporting expansion as an opportunity to increase long-term customer value.
   * Evaluated all five products across **ARR growth, renewal, engagement, and co-subscription behavior** to identify differences in portfolio performance.
 * **Recommendation:** Recommended greater emphasis on **customer retention and expansion while maintaining targeted acquisition**, alongside differentiated investment, retention, and repositioning strategies by product.
-* **Project Analysis:** [View SaaS Growth & Product Strategy](ADD-SaaS-PROJECT-LINK-HERE)
+- **Project Analysis:** [View Full SaaS Growth & Product Strategy Case Study](https://github.com/SarrahKIbrahem/SaaS-Growth-Product-Strategy)
 
 ---
 
